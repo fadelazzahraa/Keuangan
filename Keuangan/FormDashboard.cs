@@ -70,9 +70,12 @@ namespace Keuangan
                 }
 
                 label7.Text = balance.ToString("C");
+                label7.ForeColor = balance > 0 ? Color.Green : Color.Red;
                 label8.Text = creditThisMonth.ToString("C");
                 label9.Text = records[records.Count - 1].ValueRecord.ToString("C");
-                
+                label9.ForeColor = records[records.Count - 1].Transaction == "debit" ? Color.Green : Color.Red;
+
+
 
             }
             catch (Exception ex)

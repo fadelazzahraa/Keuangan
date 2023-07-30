@@ -64,12 +64,12 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(204, 176);
+            this.label2.Location = new System.Drawing.Point(209, 176);
             this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(123, 13);
+            this.label2.Size = new System.Drawing.Size(111, 13);
             this.label2.TabIndex = 7;
-            this.label2.Text = "Pengeluaran Bulanan Ini";
+            this.label2.Text = "Pengeluaran Bulan Ini";
             // 
             // label3
             // 

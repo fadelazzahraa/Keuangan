@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using System.Security.Cryptography;
 
 namespace Keuangan
 {
@@ -43,7 +46,7 @@ namespace Keuangan
 
                 Dictionary<string, object> responseDataDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseData);
 
-                Newtonsoft.Json.Linq.JArray datas = (Newtonsoft.Json.Linq.JArray)responseDataDictionary["data"];
+                JArray datas = (JArray)responseDataDictionary["data"];
 
                 foreach (var selectedData in datas)
                 {
@@ -79,7 +82,7 @@ namespace Keuangan
 
                 Dictionary<string, object> responseDataDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseData);
 
-                Newtonsoft.Json.Linq.JArray datas = (Newtonsoft.Json.Linq.JArray)responseDataDictionary["data"];
+                JArray datas = (JArray)responseDataDictionary["data"];
 
                 comboBox2.Items.Add("null");
                 foreach (var selectedData in datas)
@@ -113,6 +116,8 @@ namespace Keuangan
                 textBox4.Text = selectedRecord.Detail;
                 dateTimePicker1.Value = selectedRecord.Date;
                 textBox6.Text = selectedRecord.Tag;
+                comboBox2.SelectedIndex = selectedRecord.PhotoRecordId == null ? 0 : SetComboBoxSelectedIndexByValue(comboBox2, selectedRecord.PhotoRecordId.ToString());
+                SetPictureBoxImage();
             }
         }
 
@@ -128,6 +133,7 @@ namespace Keuangan
                     string detail = textBox4.Text;
                     DateTime date = dateTimePicker1.Value;
                     string dateformatted = date.ToString("yyyy-MM-dd");
+                    string tag = textBox6.Text;
 
                     Dictionary<string, string> data = new Dictionary<string, string>
                     {
@@ -136,7 +142,9 @@ namespace Keuangan
                         { "value", value.ToString() },
                         { "detail", detail },
                         { "date", $"{dateformatted}" },
+                        { "tag", tag },
                         { "sourceRecordId", "1" },
+                        { "photoRecordId", comboBox2.Items[comboBox2.SelectedIndex].ToString() != "null" ? comboBox2.Items[comboBox2.SelectedIndex].ToString() : null},
                     };
 
                     string requestBody = System.Text.Json.JsonSerializer.Serialize(data);
@@ -167,6 +175,7 @@ namespace Keuangan
                     string detail = textBox4.Text;
                     DateTime date = dateTimePicker1.Value;
                     string dateformatted = date.ToString("yyyy-MM-dd");
+                    string tag = textBox6.Text;
 
                     Dictionary<string, string> data = new Dictionary<string, string>
                     {
@@ -175,7 +184,9 @@ namespace Keuangan
                         { "value", value.ToString() },
                         { "detail", detail },
                         { "date", $"{dateformatted}" },
+                        { "tag", tag },
                         { "sourceRecordId", "1" },
+                        { "photoRecordId", comboBox2.Items[comboBox2.SelectedIndex].ToString() != "null" ? comboBox2.Items[comboBox2.SelectedIndex].ToString() : null},
                     };
 
                     string requestBody = System.Text.Json.JsonSerializer.Serialize(data);
@@ -221,8 +232,71 @@ namespace Keuangan
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
+            SetPictureBoxImage();
 
         }
+
+        private async void SetPictureBoxImage()
+        {
+            string selectedComboBox = comboBox2.Items[comboBox2.SelectedIndex].ToString();
+            if (selectedComboBox == "null")
+            {
+                pictureBox4.Image = null;
+            }
+            else
+            {
+                ChangeProgressBarState(true);
+                try
+                {
+                    int indexImage = Int32.Parse(selectedComboBox);
+                    using (HttpClient httpClient = new HttpClient())
+                    {
+                        httpClient.DefaultRequestHeaders.Add("Authorization", user.Token);
+                        byte[] imageData = await httpClient.GetByteArrayAsync(Connection.getPhotoImageWithIndexURL(indexImage));
+                        using (var stream = new System.IO.MemoryStream(imageData))
+                        {
+                            Image fetchedImage = Image.FromStream(stream);
+                            pictureBox4.Image = fetchedImage;
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to load the image. Error: {ex.Message}");
+                    pictureBox4.Image.Dispose();
+                }
+                ChangeProgressBarState(false);
+            }
+        }
+
+        private void ChangeProgressBarState(bool isActivated = true)
+        {
+            if (isActivated)
+            {
+                progressBar1.Style = ProgressBarStyle.Marquee;
+                progressBar1.MarqueeAnimationSpeed = 100;
+            }
+            else
+            {
+                progressBar1.Style = ProgressBarStyle.Continuous;
+                progressBar1.MarqueeAnimationSpeed = 0;
+            }
+        }
+
+        private int SetComboBoxSelectedIndexByValue(System.Windows.Forms.ComboBox comboBox, string value)
+        {
+            for (int i = 0; i < comboBox.Items.Count; i++)
+            {
+                if (comboBox.Items[i].ToString() == value)
+                {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        
     }
 }
 

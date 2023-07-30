@@ -43,6 +43,10 @@ namespace Keuangan
             return $"{hostURL}photos/{index}/image";
         }
         static public string getPhotoURL = hostURL + "photos?detail=Bank Prodesk Photo";
+        static public string getPhotoImageWithIndexURL(int index)
+        {
+            return $"{hostURL}photos/{index}/image";
+        }
 
         static public async Task<string> PostAuthorizedDataAsync(string url, string requestBody, string token)
         {
