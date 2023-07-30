@@ -106,5 +106,17 @@ namespace Keuangan
             };
             formCashFlow.Show();
         }
+
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            FormUploadBill formUploadBill = new FormUploadBill(user);
+            formUploadBill.Closed += (s, args) =>
+            {
+                this.Show();
+                LoadRecordData();
+            };
+            formUploadBill.Show();
+        }
     }
 }

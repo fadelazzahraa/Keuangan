@@ -36,6 +36,13 @@ namespace Keuangan
                 return responseData;
             }
         }
+        static public string uploadPhotoURL = hostURL + "photos/upload";
+        static public string postPhotoURL = hostURL + "photos";
+        static public string setPhotoURL(int index)
+        {
+            return $"{hostURL}photos/{index}/image";
+        }
+        static public string getPhotoURL = hostURL + "photos?detail=Bank Prodesk Photo";
 
         static public async Task<string> PostAuthorizedDataAsync(string url, string requestBody, string token)
         {
@@ -46,6 +53,19 @@ namespace Keuangan
                 httpClient.DefaultRequestHeaders.Add("Authorization", token);
 
                 HttpResponseMessage response = await httpClient.PostAsync(url, content);
+
+                string responseData = await response.Content.ReadAsStringAsync();
+                return responseData;
+            }
+        }
+
+        static public async Task<string> PostFormDataAuthorizedDataAsync(string url, MultipartFormDataContent formData, string token)
+        {
+            using (HttpClient httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Add("Authorization", token);
+
+                HttpResponseMessage response = await httpClient.PostAsync(url, formData);
 
                 string responseData = await response.Content.ReadAsStringAsync();
                 return responseData;

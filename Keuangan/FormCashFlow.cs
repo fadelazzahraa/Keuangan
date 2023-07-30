@@ -18,6 +18,7 @@ namespace Keuangan
 
         private User user;
         private BindingList<Record> records;
+        private BindingList<int> photos;
         private Record selectedRecord = null;
 
         public FormCashFlow(User loggedinuser)
@@ -61,6 +62,34 @@ namespace Keuangan
                 dataGridView1.Columns["id"].Visible = false;
                 dataGridView1.Columns["photoRecordId"].Visible = false;
 
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error occurred while making the request: " + ex.Message);
+            }
+        }
+
+        private async void LoadPhotoData()
+        {
+            photos = new BindingList<int>();
+            try
+            {
+                string responseData = await Connection.GetAuthorizedDataAsync(Connection.getPhotoURL, user.Token);
+
+                Dictionary<string, object> responseDataDictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseData);
+
+                Newtonsoft.Json.Linq.JArray datas = (Newtonsoft.Json.Linq.JArray)responseDataDictionary["data"];
+
+                comboBox2.Items.Add("null");
+                foreach (var selectedData in datas)
+                {
+                    int id = (int)selectedData["id"];
+                    photos.Add(id);
+                    comboBox2.Items.Add(id);
+                };
+                comboBox2.SelectedIndex = 0;
+
             }
             catch (Exception ex)
             {
@@ -71,6 +100,7 @@ namespace Keuangan
         private void FormCashFlow_Load(object sender, EventArgs e)
         {
             LoadRecordData();
+            LoadPhotoData();
         }
 
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -187,6 +217,11 @@ namespace Keuangan
                     MessageBox.Show("Error occurred while making the request: " + ex.Message);
                 }
             }
+        }
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
