@@ -21,7 +21,7 @@ namespace Keuangan
 
         private User user;
         private BindingList<Record> records;
-        private BindingList<int> photos;
+        private List<List<string>> photos;
         private Record selectedRecord = null;
 
         public FormCashFlow(User loggedinuser)
@@ -30,15 +30,11 @@ namespace Keuangan
             InitializeComponent();
         }
 
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private async void LoadRecordData()
         {
             records = new BindingList<Record>();
             dataGridView1.DataSource = null;
+            ChangeProgressBarState(true);
             try
             {
 
@@ -64,6 +60,10 @@ namespace Keuangan
                 dataGridView1.DataSource = records;
                 dataGridView1.Columns["id"].Visible = false;
                 dataGridView1.Columns["photoRecordId"].Visible = false;
+                dataGridView1.Columns["transaction"].HeaderText = "Transaksi";
+                dataGridView1.Columns["valueRecord"].HeaderText = "Nilai";
+                dataGridView1.Columns["date"].HeaderText = "Tanggal";
+                dataGridView1.Columns["detail"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
 
             }
@@ -71,11 +71,13 @@ namespace Keuangan
             {
                 MessageBox.Show("Error occurred while making the request: " + ex.Message);
             }
+            ChangeProgressBarState(false);
         }
 
         private async void LoadPhotoData()
         {
-            photos = new BindingList<int>();
+            photos = new List<List<string>>();
+            ChangeProgressBarState(true);
             try
             {
                 string responseData = await Connection.GetAuthorizedDataAsync(Connection.getPhotoURL, user.Token);
@@ -85,11 +87,25 @@ namespace Keuangan
                 JArray datas = (JArray)responseDataDictionary["data"];
 
                 comboBox2.Items.Add("null");
+                
+                photos.Add(new List<string>
+                {
+                    "0",
+                    "null"
+                });
+
                 foreach (var selectedData in datas)
                 {
-                    int id = (int)selectedData["id"];
-                    photos.Add(id);
-                    comboBox2.Items.Add(id);
+                    string id = (string)selectedData["id"];
+                    string tag = (string)selectedData["tag"];
+                    photos.Add(new List<string>
+                    {
+                        id,
+                        tag,
+                    });
+
+                    comboBox2.Items.Add($"{id} - {tag}");
+
                 };
                 comboBox2.SelectedIndex = 0;
 
@@ -98,6 +114,7 @@ namespace Keuangan
             {
                 MessageBox.Show("Error occurred while making the request: " + ex.Message);
             }
+            ChangeProgressBarState(false);
         }
 
         private void FormCashFlow_Load(object sender, EventArgs e)
@@ -110,13 +127,31 @@ namespace Keuangan
         {
             if (e.RowIndex >= 0 && e.RowIndex < dataGridView1.Rows.Count)
             {
+                ChangeProgressBarState(true);
                 selectedRecord = records[e.RowIndex];
                 comboBox1.SelectedIndex = selectedRecord.Transaction == "debit" ? 0 : 1;
                 textBox3.Text = selectedRecord.ValueRecord.ToString();
                 textBox4.Text = selectedRecord.Detail;
                 dateTimePicker1.Value = selectedRecord.Date;
                 textBox6.Text = selectedRecord.Tag;
-                comboBox2.SelectedIndex = selectedRecord.PhotoRecordId == null ? 0 : SetComboBoxSelectedIndexByValue(comboBox2, selectedRecord.PhotoRecordId.ToString());
+
+                if (selectedRecord.PhotoRecordId != null)
+                {
+                    for (int i = 0; i < photos.Count; i++)
+                    {
+                        if (photos[i].Contains(selectedRecord.PhotoRecordId.ToString()))
+                        {
+                            comboBox2.SelectedIndex = i;
+                            break;
+                        }
+                    }
+
+                } else
+                {
+                    comboBox2.SelectedIndex = 0;
+                }
+                ChangeProgressBarState(false);
+
                 SetPictureBoxImage();
             }
         }
@@ -126,6 +161,7 @@ namespace Keuangan
             DialogResult result = MessageBox.Show("Do you want to proceed to add record?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
+                ChangeProgressBarState(true);
                 try
                 {
                     string transaction = comboBox1.SelectedIndex == 0 ? "debit" : "credit";
@@ -144,7 +180,7 @@ namespace Keuangan
                         { "date", $"{dateformatted}" },
                         { "tag", tag },
                         { "sourceRecordId", "1" },
-                        { "photoRecordId", comboBox2.Items[comboBox2.SelectedIndex].ToString() != "null" ? comboBox2.Items[comboBox2.SelectedIndex].ToString() : null},
+                        { "photoRecordId", comboBox2.SelectedIndex != 0 ? photos[comboBox2.SelectedIndex][0] : null},
                     };
 
                     string requestBody = System.Text.Json.JsonSerializer.Serialize(data);
@@ -160,6 +196,7 @@ namespace Keuangan
                 {
                     MessageBox.Show("Error occurred while making the request: " + ex.Message);
                 }
+                ChangeProgressBarState(false);
             }
         }
 
@@ -168,6 +205,7 @@ namespace Keuangan
             DialogResult result = MessageBox.Show("Do you want to proceed to edit record?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
+                ChangeProgressBarState(true);
                 try
                 {
                     string transaction = comboBox1.SelectedIndex == 0 ? "debit" : "credit";
@@ -186,7 +224,7 @@ namespace Keuangan
                         { "date", $"{dateformatted}" },
                         { "tag", tag },
                         { "sourceRecordId", "1" },
-                        { "photoRecordId", comboBox2.Items[comboBox2.SelectedIndex].ToString() != "null" ? comboBox2.Items[comboBox2.SelectedIndex].ToString() : null},
+                        { "photoRecordId", comboBox2.SelectedIndex != 0 ? photos[comboBox2.SelectedIndex][0] : null},
                     };
 
                     string requestBody = System.Text.Json.JsonSerializer.Serialize(data);
@@ -202,6 +240,7 @@ namespace Keuangan
                 {
                     MessageBox.Show("Error occurred while making the request: " + ex.Message);
                 }
+                ChangeProgressBarState(false);
             }
         }
 
@@ -210,6 +249,7 @@ namespace Keuangan
             DialogResult result = MessageBox.Show("Do you want to proceed to delete record?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
+                ChangeProgressBarState(true);
                 try
                 {
                     Dictionary<string, string> data = new Dictionary<string, string>
@@ -227,6 +267,7 @@ namespace Keuangan
                 {
                     MessageBox.Show("Error occurred while making the request: " + ex.Message);
                 }
+                ChangeProgressBarState(false);
             }
         }
 
@@ -238,17 +279,13 @@ namespace Keuangan
 
         private async void SetPictureBoxImage()
         {
-            string selectedComboBox = comboBox2.Items[comboBox2.SelectedIndex].ToString();
-            if (selectedComboBox == "null")
-            {
-                pictureBox4.Image = null;
-            }
-            else
+            pictureBox4.Image = null;
+            if (comboBox2.SelectedIndex != 0)
             {
                 ChangeProgressBarState(true);
                 try
                 {
-                    int indexImage = Int32.Parse(selectedComboBox);
+                    int indexImage = Int32.Parse(photos[comboBox2.SelectedIndex][0]);
                     using (HttpClient httpClient = new HttpClient())
                     {
                         httpClient.DefaultRequestHeaders.Add("Authorization", user.Token);
@@ -274,29 +311,18 @@ namespace Keuangan
         {
             if (isActivated)
             {
-                progressBar1.Style = ProgressBarStyle.Marquee;
-                progressBar1.MarqueeAnimationSpeed = 100;
+                toolStripStatusLabel1.Text = "Loading...";
+                toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
+                toolStripProgressBar1.MarqueeAnimationSpeed = 100;
             }
             else
             {
-                progressBar1.Style = ProgressBarStyle.Continuous;
-                progressBar1.MarqueeAnimationSpeed = 0;
+                toolStripStatusLabel1.Text = "Ready";
+                toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
+                toolStripProgressBar1.MarqueeAnimationSpeed = 0;
             }
         }
 
-        private int SetComboBoxSelectedIndexByValue(System.Windows.Forms.ComboBox comboBox, string value)
-        {
-            for (int i = 0; i < comboBox.Items.Count; i++)
-            {
-                if (comboBox.Items[i].ToString() == value)
-                {
-                    return i;
-                }
-            }
-            return 0;
-        }
-
-        
     }
 }
 

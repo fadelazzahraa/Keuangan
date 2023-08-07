@@ -29,6 +29,10 @@ namespace Keuangan
             string username = textBox1.Text;
             string password = textBox2.Text;
 
+            button1.Visible = false;
+            pictureBox1.Visible = false;
+            label4.Visible = false;
+            label5.Visible = true;
             try
             {
                 // Create a dictionary to represent the data you want to send in the request body
@@ -67,6 +71,11 @@ namespace Keuangan
             {
                 MessageBox.Show("Error occurred while making the request: " + ex.Message);
             }
+
+            button1.Visible = true;
+            pictureBox1.Visible = true;
+            label4.Visible = true;
+            label5.Visible = false;
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)

@@ -37,9 +37,10 @@ namespace Keuangan
 
         private async void UploadButton_Click(object sender, EventArgs e)
         {
-            
+            UploadingState(true);
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
+                
                 string selectedFilePath = openFileDialog.FileName;
                 using (var f = File.OpenRead(selectedFilePath))
                 {
@@ -59,6 +60,7 @@ namespace Keuangan
                         {
                             { "detail", "Bank Prodesk Photo" },
                             { "startDate", DateTime.Now.ToString("yyyy-MM-dd")},
+                            { "tag", textBox1.Text },
                         };
 
                         string requestBody = System.Text.Json.JsonSerializer.Serialize(data);
@@ -106,6 +108,7 @@ namespace Keuangan
             {
                 MessageBox.Show("Select correct photo first!");
             }
+            UploadingState(false);
         }
 
         private void SelectImageButton_Click(object sender, EventArgs e)
@@ -117,8 +120,42 @@ namespace Keuangan
                 pictureBox.Image = Image.FromFile(selectedFilePath);
 
                 uploadButton.Enabled = true;
+                textBox1.Enabled = true;
             }
         }
+
+        private void UploadingState(bool state = false)
+        {
+            if (state)
+            {
+                selectImageButton.Enabled = false;
+                selectImageButton.Visible = false;
+                uploadButton.Enabled = false;
+                uploadButton.Visible = false;
+                textBox1.Enabled = false;
+                textBox1.Visible = false;
+                label1.Enabled = false;
+                label1.Visible = false;
+
+                label2.Enabled = true;
+                label2.Visible = true;
+            } else
+            {
+                selectImageButton.Enabled = true;
+                selectImageButton.Visible = true;
+                uploadButton.Enabled = true;
+                uploadButton.Visible = true;
+                textBox1.Enabled = true;
+                textBox1.Visible = true;
+                label1.Enabled = true;
+                label1.Visible = true;
+
+                label2.Enabled = false;
+                label2.Visible = false;
+            }
+        }
+
+        
     }
 }
     

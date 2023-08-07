@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Security.Policy;
 using System.Text;
@@ -27,6 +28,7 @@ namespace Keuangan
         private async void LoadRecordData()
         {
             records = new List<Record>();
+            ChangeProgressBarState(true);
             try
             {
 
@@ -50,6 +52,7 @@ namespace Keuangan
                 }
 
                 float balance = 0;
+                float debitThisMonth = 0;
                 float creditThisMonth = 0;
 
                 foreach (Record record in records)
@@ -63,25 +66,39 @@ namespace Keuangan
                         balance -= record.ValueRecord;
                     }
 
-                    if (record.Date.Month == DateTime.Now.Month && record.Transaction == "credit")
+                    if (record.Transaction == "debit" && record.Date.Month == DateTime.Now.Month)
+                    {
+                        debitThisMonth += record.ValueRecord;
+                    }
+                    else if (record.Transaction == "credit" && record.Date.Month == DateTime.Now.Month)
                     {
                         creditThisMonth += record.ValueRecord;
                     }
                 }
 
-                label7.Text = balance.ToString("C");
+                CultureInfo info = new CultureInfo("id-ID");
+
+                label11.Text = $"Pemasukan {DateTime.Now.ToString("MMMM", info)}";
+                label3.Text = $"Pengeluaran {DateTime.Now.ToString("MMMM", info)}";
+
+                label7.Text = balance.ToString("C", info);
                 label7.ForeColor = balance > 0 ? Color.Green : Color.Red;
-                label8.Text = creditThisMonth.ToString("C");
-                label9.Text = records[records.Count - 1].ValueRecord.ToString("C");
-                label9.ForeColor = records[records.Count - 1].Transaction == "debit" ? Color.Green : Color.Red;
+                label8.Text = debitThisMonth.ToString("C", info);
+                label8.ForeColor = Color.Green;
+                label9.Text = creditThisMonth.ToString("C", info);
+                label9.ForeColor = Color.Red;
 
-
+                label2.Text = records[records.Count - 1].ValueRecord.ToString("C", info);
+                label2.ForeColor = records[records.Count - 1].Transaction == "debit" ? Color.Green : Color.Red;
+                label12.Text = records[records.Count - 1].Detail;
+                label13.Text = records[records.Count - 1].Date.ToString("dd/MM/yyyy");
 
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error occurred while making the request: " + ex.Message);
             }
+            ChangeProgressBarState(false);
         }
 
         private void FormDashboard_Load(object sender, EventArgs e)
@@ -100,7 +117,7 @@ namespace Keuangan
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-            this.Hide();
+           /* this.Hide();*/
             FormCashFlow formCashFlow = new FormCashFlow(user);
             formCashFlow.Closed += (s, args) =>
             {
@@ -120,6 +137,22 @@ namespace Keuangan
                 LoadRecordData();
             };
             formUploadBill.Show();
+        }
+
+        private void ChangeProgressBarState(bool isActivated = true)
+        {
+            if (isActivated)
+            {
+                toolStripStatusLabel1.Text = "Loading...";
+                toolStripProgressBar1.Style = ProgressBarStyle.Marquee;
+                toolStripProgressBar1.MarqueeAnimationSpeed = 100;
+            }
+            else
+            {
+                toolStripStatusLabel1.Text = "Ready";
+                toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
+                toolStripProgressBar1.MarqueeAnimationSpeed = 0;
+            }
         }
     }
 }
