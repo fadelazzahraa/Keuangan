@@ -56,16 +56,8 @@ namespace Keuangan
 
                     records.Add(new Record(id, transaction, value, detail, date, tag, photoRecordId));
                 };
-
                 dataGridView1.DataSource = records;
-                dataGridView1.Columns["id"].Visible = false;
-                dataGridView1.Columns["photoRecordId"].Visible = false;
-                dataGridView1.Columns["transaction"].HeaderText = "Transaksi";
-                dataGridView1.Columns["valueRecord"].HeaderText = "Nilai";
-                dataGridView1.Columns["date"].HeaderText = "Tanggal";
-                dataGridView1.Columns["detail"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
-
+                AdjustDataGridView();
             }
             catch (Exception ex)
             {
@@ -321,6 +313,44 @@ namespace Keuangan
                 toolStripProgressBar1.Style = ProgressBarStyle.Continuous;
                 toolStripProgressBar1.MarqueeAnimationSpeed = 0;
             }
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            DoSearch();
+        }
+
+        private void DoSearch()
+        {
+            if (textBox1.Text == "" || textBox1.Text == null)
+            {
+                dataGridView1.DataSource = records;
+            }
+            else
+            {
+                string searchTerm = textBox1.Text.ToLower();
+
+                var filteredData = records.Where(item =>
+                    item.Transaction.ToLower().Contains(searchTerm) ||
+                    item.ValueRecord.ToString().Contains(searchTerm) ||
+                    item.Detail.ToLower().Contains(searchTerm) ||
+                    item.Date.ToString("dd/MM/yyyy").Contains(searchTerm) ||
+                    item.Tag.ToLower().Contains(searchTerm)
+                    ).ToList();
+
+                dataGridView1.DataSource = filteredData;
+            }
+            AdjustDataGridView();
+        }
+
+        private void AdjustDataGridView()
+        {
+            dataGridView1.Columns["id"].Visible = false;
+            dataGridView1.Columns["photoRecordId"].Visible = false;
+            dataGridView1.Columns["transaction"].HeaderText = "Transaksi";
+            dataGridView1.Columns["valueRecord"].HeaderText = "Nilai";
+            dataGridView1.Columns["date"].HeaderText = "Tanggal";
+            dataGridView1.Columns["detail"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         }
 
     }
