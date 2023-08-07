@@ -117,7 +117,7 @@ namespace Keuangan
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-           /* this.Hide();*/
+            this.Hide();
             FormCashFlow formCashFlow = new FormCashFlow(user);
             formCashFlow.Closed += (s, args) =>
             {
